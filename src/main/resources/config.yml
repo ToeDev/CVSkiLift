@@ -1,0 +1,12 @@
+#Coords of where the lifts should spawn
+Ski-Lift-Spawn:
+  x: 25
+  y: 86
+  z: 305
+  world: testing
+
+#How often the lifts will spawn in Seconds
+Ski-Lift-Spawn-Increment: 5
+
+#How many lifts should be on the track at once
+Ski-Lifts-Total: 5

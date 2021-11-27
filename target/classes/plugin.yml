@@ -1,0 +1,15 @@
+main: org.cubeville.cvskilift.CVSkiLift
+name: CVSkiLift
+version: 0.1
+api-version: 1.16
+description: 'CVSkiLift Plugin'
+author: ToeMan_
+depend: [CVTools]
+commands:
+  cvskilift:
+    permission: CVSkiLift.admin
+
+permissions:
+  CVSkiLift.admin:
+    description: Permissions to all
+    default: op
