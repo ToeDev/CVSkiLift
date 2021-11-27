@@ -70,13 +70,17 @@ public class CVSkiLiftCommand extends Command {
             List<Minecart> toDelete = new ArrayList<>();
             for(Map.Entry<Minecart, HashMap<Snowman, Pig>> lift : lifts.entrySet()) {
                 Minecart minecart = lift.getKey();
-                if(minecart.getVelocity().equals(new Vector(0, 0, 0))) {
+                Snowman snowman = null;
+                Pig pig = null;
+                HashMap<Snowman, Pig> nestedHashMap = lift.getValue();
+                for(Map.Entry<Snowman, Pig> pair : nestedHashMap.entrySet()) {
+                    snowman = pair.getKey();
+                    pig = pair.getValue();
+                }
+                if(minecart.getVelocity().equals(new Vector(0, 0, 0)) || pig.isDead()) {
                     minecart.remove();
-                    HashMap<Snowman, Pig> nestedHashMap = lift.getValue();
-                    for(Map.Entry<Snowman, Pig> pair : nestedHashMap.entrySet()) {
-                        pair.getKey().remove();
-                        pair.getValue().remove();
-                    }
+                    snowman.remove();
+                    pig.remove();
                     toDelete.add(minecart);
                 }
             }
