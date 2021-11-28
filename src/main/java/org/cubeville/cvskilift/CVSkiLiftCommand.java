@@ -14,6 +14,8 @@ import org.cubeville.commons.commands.Command;
 import org.cubeville.commons.commands.CommandParameterString;
 import org.cubeville.commons.commands.CommandResponse;
 
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftEntity;
+
 import java.util.*;
 
 public class CVSkiLiftCommand extends Command {
@@ -24,8 +26,14 @@ public class CVSkiLiftCommand extends Command {
     final private int liftSpawnIncrement;
     final private int liftsTotal;
     private boolean liftStarted;
-    final private HashMap<Minecart, HashMap<Snowman, Pig>> lifts;
+    final private HashMap<Minecart, Passengers> lifts;
 
+    class Passengers {
+	Passengers(Snowman snowman, Pig pig) { this.snowman = snowman; this.pig = pig; }
+	public Snowman snowman;
+	public Pig pig;
+    }
+    
     public CVSkiLiftCommand(CVSkiLift plugin) {
         super("");
         addBaseParameter(new CommandParameterString()); //start or stop
@@ -68,15 +76,9 @@ public class CVSkiLiftCommand extends Command {
     public void startLift() {
         int taskID = scheduler.runTaskTimer(plugin, () -> {
             List<Minecart> toDelete = new ArrayList<>();
-            for(Map.Entry<Minecart, HashMap<Snowman, Pig>> lift : lifts.entrySet()) {
-                Minecart minecart = lift.getKey();
-                Snowman snowman = null;
-                Pig pig = null;
-                HashMap<Snowman, Pig> nestedHashMap = lift.getValue();
-                for(Map.Entry<Snowman, Pig> pair : nestedHashMap.entrySet()) {
-                    snowman = pair.getKey();
-                    pig = pair.getValue();
-                }
+            for(Minecart minecart: lifts.keySet()) {
+		Snowman snowman = lifts.get(minecart).snowman;
+                Pig pig = lifts.get(minecart).pig;
                 if(minecart.getVelocity().equals(new Vector(0, 0, 0)) || pig.isDead()) {
                     minecart.remove();
                     snowman.remove();
@@ -94,35 +96,48 @@ public class CVSkiLiftCommand extends Command {
                 Snowman snowman = world.spawn(liftSpawn, Snowman.class);
                 snowman.setInvulnerable(true);
                 snowman.setDerp(true);
+		snowman.setAI(false);
                 minecart.addPassenger(snowman);
-                Pig pig = world.spawn(liftSpawn, Pig.class);
+		Location pigSpawn = liftSpawn.clone();
+		pigSpawn.subtract(0, 5, 0);
+                Pig pig = world.spawn(pigSpawn, Pig.class);
                 pig.setInvulnerable(true);
                 pig.setSaddle(true);
                 pig.setInvisible(true);
+		pig.setAI(false);
                 pig.setLeashHolder(minecart);
-                HashMap<Snowman, Pig> nestedHashMap = new HashMap<>();
-                nestedHashMap.put(snowman, pig);
-                lifts.put(minecart, nestedHashMap);
+		lifts.put(minecart, new Passengers(snowman, pig));
+		System.out.println(pig.getUniqueId());
             }
         }, 0, (long) liftSpawnIncrement * 20).getTaskId();
-        plugin.putLiftTaskID(taskID);
+
+	int pigTaskID = scheduler.runTaskTimer(plugin, () -> {
+		for(Minecart m: lifts.keySet()) {
+		    Pig pig = lifts.get(m).pig;
+		    Location pigLocation = m.getLocation().clone();
+		    pigLocation.subtract(0, 5, 0);
+		    float yaw = pigLocation.getYaw() + 90.0f;
+		    if(yaw >= 360.0f) yaw -= 360.0f;
+		    ((CraftEntity) pig).getHandle().setPositionRotation(pigLocation.getX(), pigLocation.getY(), pigLocation.getZ(), yaw, 0);
+		}
+	    }, 1, 1).getTaskId();
+
+        plugin.putLiftTaskID(taskID, pigTaskID);
+	    
     }
 
     public void stopLift() {
         scheduler.cancelTask(plugin.getLiftTaskID());
+	scheduler.cancelTask(plugin.getPigLiftTaskID());
     }
 
     public void clearLift() {
         List<Minecart> toDelete = new ArrayList<>();
-        for(Map.Entry<Minecart, HashMap<Snowman, Pig>> lift : lifts.entrySet()) {
-            Minecart minecart = lift.getKey();
+        for(Minecart minecart: lifts.keySet()) {
             minecart.remove();
-            HashMap<Snowman, Pig> nestedHashMap = lift.getValue();
-            for(Map.Entry<Snowman, Pig> pair : nestedHashMap.entrySet()) {
-                pair.getKey().remove();
-                pair.getValue().remove();
-                toDelete.add(minecart);
-            }
+	    lifts.get(minecart).pig.remove();
+	    lifts.get(minecart).snowman.remove();
+	    toDelete.add(minecart);
         }
         for(Minecart minecart : toDelete) {
             lifts.remove(minecart);
