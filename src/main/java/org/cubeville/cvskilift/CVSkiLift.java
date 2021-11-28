@@ -109,7 +109,7 @@ public class CVSkiLift extends JavaPlugin implements Listener {
         return this.liftTaskID;
     }
 
-    public int getPigLiftTaskId() {
+    public int getPigLiftTaskID() {
         return pigLiftTaskID;
     }
     
