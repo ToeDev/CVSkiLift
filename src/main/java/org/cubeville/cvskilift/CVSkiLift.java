@@ -28,7 +28,8 @@ public class CVSkiLift extends JavaPlugin implements Listener {
     private int liftSpawnIncrement;
     private int liftsTotal;
     private int liftTaskID;
-
+    private int pigLiftTaskID;
+    
     private CommandParser skiLiftParser;
     private CVSkiLiftCommand pluginCommand;
 
@@ -78,7 +79,8 @@ public class CVSkiLift extends JavaPlugin implements Listener {
         }
 
         liftTaskID = 0;
-
+        pigLiftTaskID = 0;
+	
         skiLiftParser = new CommandParser();
         pluginCommand = new CVSkiLiftCommand(this);
         skiLiftParser.addCommand(pluginCommand);
@@ -98,14 +100,19 @@ public class CVSkiLift extends JavaPlugin implements Listener {
         return this.liftsTotal;
     }
 
-    public void putLiftTaskID(int taskID) {
+    public void putLiftTaskID(int taskID, int pigLiftTaskID) {
         liftTaskID = taskID;
+	this.pigLiftTaskID = pigLiftTaskID;
     }
 
     public int getLiftTaskID() {
         return this.liftTaskID;
     }
 
+    public int getPigLiftTaskID() {
+        return pigLiftTaskID;
+    }
+    
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if(command.getName().equalsIgnoreCase("cvskilift")) {
