@@ -3,7 +3,7 @@ name: CVSkiLift
 version: 0.1
 api-version: 1.16
 description: 'CVSkiLift Plugin'
-author: ToeMan_
+author: ToeMan_,FrediW
 depend: [CVTools]
 commands:
   cvskilift:
